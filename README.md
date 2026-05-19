@@ -1,3 +1,8 @@
+
+
+
+I'm a product engineer who loves diving deep into **backend systems**, **graphics performance**, and **scientific computing**, while also building robust **full-stack web applications**. My recent work spans from
+
 # Babaolu — Software Engineer
 
 I build **full‑stack products** and enjoy going deep on **backend systems**, **graphics/performance**, and **scientific computing**. My work blends practical delivery with strong fundamentals (data structures, systems thinking, and iterative experimentation).
