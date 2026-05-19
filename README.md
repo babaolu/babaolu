@@ -1,6 +1,8 @@
 # Babaolu — Software Engineer
 
 I build **full‑stack products** and enjoy going deep on **backend systems**, **graphics/performance**, and **scientific computing**. My work blends practical delivery with strong fundamentals (data structures, systems thinking, and iterative experimentation).
+<!--START_PROFILE-->
+<!--END_PROFILE-->
 
 ## Core focus areas
 **Full‑stack Product Engineering**
