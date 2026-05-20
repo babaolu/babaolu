@@ -4,8 +4,8 @@ update_profile.py
 Weekly GitHub Action script that:
   1. Fetches all public repos via GitHub API (with pagination)
   2. Gathers per-repo detail: description, topics, languages, README snippet
-  3. Sends the data to Gemini to write a compelling developer profile
-  4. Injects the result between markers in the profile README.md
+  3. Sends the data to Gemini, along with the current README for structure reference
+  4. Gemini rewrites the ENTIRE README — every section updated from repo data
 """
 
 import os
@@ -20,8 +20,6 @@ GITHUB_TOKEN     = os.environ["GITHUB_TOKEN"]
 GEMINI_API_KEY   = os.environ["GEMINI_API_KEY"]
 
 README_PATH   = "README.md"
-START_MARKER  = ""
-END_MARKER    = ""
 
 # How many repos to spotlight (most recent first)
 TOP_N_RECENT  = 6
@@ -116,34 +114,54 @@ def collect_repo_data(repos: list[dict]) -> tuple[list[dict], list[dict]]:
     return recent, context
 
 # ── Call Gemini API ───────────────────────────────────────────────────────────
-def call_gemini(recent: list[dict], context: list[dict], total: int) -> str:
+def read_current_readme() -> str:
+    if os.path.exists(README_PATH):
+        with open(README_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
+def call_gemini(recent: list[dict], context: list[dict], total: int, current_readme: str) -> str:
     recent_text  = json.dumps(recent,  indent=2)
     context_text = json.dumps(context, indent=2)
 
     prompt = textwrap.dedent(f"""
-        You are writing the "About me" section for a GitHub profile README.
-        The owner of this profile is a developer. Use the repository data below
-        to infer who they are, what they build, and what they care about.
+        You are maintaining a developer's GitHub profile README.
+        Your job is to rewrite the ENTIRE README from scratch, using the
+        repository data below as the source of truth for every section.
 
-        Guidelines:
-        - Write in first person, friendly and genuine — not a boring CV.
-        - Highlight what the recent projects reveal about current focus/skills.
-        - Mention specific project names as natural examples, not a dry list.
-        - Identify patterns across all repos (themes, tech stacks, domains).
-        - Keep it concise: roughly 120–180 words of prose.
-        - After the prose, add a "🔧 Current tech focus" line with 4–6 emoji-tagged
-          technologies or domains, derived from the data.
-        - End with a short "📌 Recently shipped" section: a Markdown table
-          (columns: Project | What it does | Stack) for the {len(recent)} most
-          recent repos.
-        - Do NOT add a title heading — the README already has one.
-        - Output only the Markdown content, nothing else.
+        Use the current README as a structural template only — mirror its
+        sections and formatting style (headings, bullet lists, tables, etc.)
+        but replace ALL content with what you discover from the repo data.
+        Nothing in the current README should carry over unchanged unless the
+        repo data confirms it still belongs there.
 
-        === RECENT REPOS (most important — give these most weight) ===
+        Rewrite rules:
+        - Header / tagline: keep the developer's name, update the tagline if
+          the repos suggest a more accurate description.
+        - Intro paragraph: written in first person, genuine and specific.
+          Reflect what the recent repos reveal about current focus.
+        - Core focus areas: derive these entirely from the repos.
+          Remove any area that has no repo evidence; add any that do.
+        - Selected projects: pull from the {len(recent)} most recent repos.
+          Each entry should have a one-line description and a stack note.
+          Do not mention repos that have no description and no README content.
+        - Technical skills: infer from languages, topics, and README hints
+          across all repos. Update every sub-list accordingly.
+        - Contact: preserve all links and placeholders exactly as they appear
+          in the current README — do not change or remove any of them.
+        - Tone: professional but human. No filler phrases like "passionate about".
+        - Output ONLY the final Markdown. No commentary, no code fences.
+
+        === CURRENT README (structure/style reference only) ===
+        {current_readme}
+
+        === RECENT REPOS (highest weight — {len(recent)} most recently pushed) ===
         {recent_text}
 
-        === OLDER REPOS (background context, {total - len(recent)} total public repos) ===
+        === OLDER REPOS (background context — {total - len(recent)} repos) ===
         {context_text}
+
+        Last updated: {datetime.now(timezone.utc).strftime("%Y-%m-%d")}
     """).strip()
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
@@ -153,7 +171,7 @@ def call_gemini(recent: list[dict], context: list[dict], total: int) -> str:
             "parts": [{"text": prompt}]
         }],
         "generationConfig": {
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 2048
         }
     }
 
@@ -168,33 +186,11 @@ def call_gemini(recent: list[dict], context: list[dict], total: int) -> str:
     # Parse the text from the Gemini response payload
     return response.json()["candidates"][0]["content"]["parts"][0]["text"]
 
-# ── Inject into README ────────────────────────────────────────────────────────
-def update_readme(new_block: str) -> None:
-    if not os.path.exists(README_PATH):
-        text = f"# {GITHUB_USER}\n\n{START_MARKER}\n{END_MARKER}\n"
-    else:
-        with open(README_PATH, "r", encoding="utf-8") as f:
-            text = f.read()
-
-    if START_MARKER not in text:
-        text = text.rstrip("\n") + f"\n\n{START_MARKER}\n{END_MARKER}\n"
-
-    start_idx = text.index(START_MARKER) + len(START_MARKER)
-    end_idx   = text.index(END_MARKER)
-
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    updated = (
-        text[:start_idx]
-        + f"\n\n\n"
-        + new_block.strip()
-        + "\n\n"
-        + text[end_idx:]
-    )
-
+# ── Write full README ─────────────────────────────────────────────────────────
+def update_readme(new_content: str) -> None:
     with open(README_PATH, "w", encoding="utf-8") as f:
-        f.write(updated)
-
-    print("✅  README.md updated.")
+        f.write(new_content.strip() + "\n")
+    print("✅  README.md fully rewritten.")
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
@@ -204,10 +200,11 @@ def main():
 
     recent, context = collect_repo_data(repos)
 
-    print("🤖  Asking Gemini to write the profile …")
-    profile_md = call_gemini(recent, context, total=len(repos))
+    current_readme = read_current_readme()
+    print("🤖  Asking Gemini to rewrite the full profile README …")
+    new_readme = call_gemini(recent, context, total=len(repos), current_readme=current_readme)
 
-    update_readme(profile_md)
+    update_readme(new_readme)
 
 if __name__ == "__main__":
     main()
