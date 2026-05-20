@@ -234,7 +234,7 @@ def call_gemini(spotlight: list[dict], context: list[dict],
             "parts": [{"text": prompt}]
         }],
         "generationConfig": {
-            "maxOutputTokens": 3000
+            "maxOutputTokens": 8192  # Increased to maximum possible output
         }
     }
 
@@ -246,7 +246,21 @@ def call_gemini(spotlight: list[dict], context: list[dict],
     )
     response.raise_for_status()
     
-    return response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    # Parse the response safely
+    response_data = response.json()
+    candidate = response_data.get("candidates", [{}])[0]
+    
+    # Check WHY the model stopped generating
+    finish_reason = candidate.get("finishReason", "UNKNOWN")
+    if finish_reason != "STOP":
+        print(f"⚠️ WARNING: Gemini stopped generating early. Reason: {finish_reason}")
+    
+    try:
+        return candidate["content"]["parts"][0]["text"]
+    except KeyError:
+        print("❌ ERROR: Could not extract text from Gemini response.")
+        print(f"Full response debug: {json.dumps(response_data, indent=2)}")
+        return ""
 
 # ── Write README ──────────────────────────────────────────────────────────────
 def update_readme(content: str) -> None:
