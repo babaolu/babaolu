@@ -23,38 +23,38 @@ I focus on developing robust native applications for mobile platforms and buildi
 
 ## Selected Projects
 
-**[InterGen](https://github.com/babaolu/InterGen)**
-InterGen is a lightweight web tool that takes any job title and returns three thoughtful, role-specific interview questions, powered by the Google Gemini API. Built as part of a technical screen exercise, the project emphasizes simple, readable, and secure code. It utilizes a Netlify serverless function to proxy requests to the Google Gemini API, ensuring security and efficiency, with its frontend developed using plain HTML, CSS, and JavaScript, demonstrating a preference for framework-agnostic solutions.
-Stack: HTML, JavaScript, Node.js, Netlify Serverless Functions, Google Gemini API
-
 **[babaolu](https://github.com/babaolu/babaolu)**
-This repository serves as my dynamic GitHub profile README, designed to automatically update and reflect my latest projects, skills, and specializations. It acts as a living portfolio, consolidating my work in native mobile systems, high-performance graphics, and decentralized applications. The project itself demonstrates the implementation of GitHub Actions for automated content management, ensuring that my profile remains current and accurately showcases my ongoing technical contributions and evolving areas of interest.
+This repository serves as my dynamic GitHub profile README, designed to automatically update and reflect my latest projects, skills, and specializations. It acts as a living portfolio, consolidating my work in native mobile systems, high-performance graphics, and decentralized applications. The project itself demonstrates the implementation of GitHub Actions for automated content management, ensuring that my profile remains current and accurately showcases my ongoing technical contributions and evolving areas of interest, including recent improvements to the update logic and AI-driven profile refreshing.
 Stack: Python, GitHub Actions
 
+**[InterGen](https://github.com/babaolu/InterGen)**
+InterGen is a lightweight web tool designed to generate three thoughtful, role-specific interview questions for any given job title, powered by the Google Gemini API. Developed as part of a technical screen, the project prioritizes simple, readable, and secure code. It features a plain HTML, CSS, and JavaScript frontend, communicating with a Netlify Serverless Function (Node.js) that securely proxies requests to the `gemini-2.5-flash` API, demonstrating a practical approach to integrating AI into web applications with serverless architecture.
+Stack: HTML, JavaScript, Node.js, Netlify Serverless Functions, Google Gemini API
+
 **[MobileCAD](https://github.com/babaolu/MobileCAD)**
-MobileCAD is a native Android CAD application developed with C++20 and Vulkan, utilizing Android NDK NativeActivity for direct hardware interaction without X11 or GLFW. This project showcases deep expertise in low-level mobile graphics, incorporating the Slang shader language and managing manual APK packaging. Recent development has focused on resolving critical runtime crash bugs related to Vulkan swapchain management and `ANativeActivity` lifecycle, ensuring robust application stability and performance through meticulous debugging and error handling.
-Stack: C++, CMake, Shell, Slang, Vulkan, Android NDK, aapt2, zipalign, apksigner
+MobileCAD is a native Android CAD application built using C++20 and Vulkan, leveraging Android NDK NativeActivity for direct hardware interaction without reliance on high-level frameworks like X11 or GLFW. This project highlights deep expertise in low-level mobile graphics development, including custom ARM64 toolchains, the Slang shader language, and manual APK packaging. Recent work has focused on robust error handling and fixing critical runtime crash bugs related to Vulkan swapchain management and the `ANativeActivity` lifecycle, ensuring high performance and stability.
+Stack: C++, CMake, Shell, Slang, Vulkan, Android NDK, aapt2, zipalign, apksigner, ARM64
 
 **[Poot](https://github.com/babaolu/Poot)**
-Poot is a Decentralized Physical Infrastructure Network (DePIN) designed to connect mobile resource providers with cloud customers. It features a unique demand-gated token economy, minting tokens only when real customer instances actively consume miner resources, thereby preventing speculative inflation. Technically, it employs secure data sharding using erasure coding (Reed-Solomon) and k-redundancy for fault tolerance, alongside a C++23 orchestrator service integrated with PostgreSQL to manage the distributed network efficiently.
-Stack: Makefile, C++, CMake, Python, TypeScript, PostgreSQL, Reed-Solomon
+Poot is a pioneering Decentralized Physical Infrastructure Network (DePIN) that connects mobile resource providers with cloud customers. It features a unique demand-gated token economy, where tokens are only minted when real customer instances actively consume miner resources, preventing speculative inflation. The system ensures data integrity and customer uptime through secure data sharding with erasure coding (Reed-Solomon) and k-redundancy. Its architecture includes a C++23 orchestrator service integrated with PostgreSQL to efficiently manage the distributed network.
+Stack: Makefile, C++, CMake, Python, TypeScript, PostgreSQL, Reed-Solomon, DePIN
 
 **[arm-ndk](https://github.com/babaolu/arm-ndk)**
-This project provides a reusable toolchain infrastructure for cross-compiling native C++/Vulkan Android applications directly on ARM64 devices within PRoot Ubuntu environments. It eliminates the need for Gradle or x86_64 emulation by leveraging the system's native `clang` compiler with NDK sysroot and libraries. The custom CMake toolchain and accompanying Bash scripts handle direct APK construction using `aapt2`, `zipalign`, and `apksigner`, demonstrating a comprehensive understanding of low-level Android build and packaging processes.
+This project provides reusable toolchain infrastructure for cross-compiling native C++/Vulkan Android applications directly on ARM64 devices within PRoot Ubuntu environments, bypassing the need for Gradle or x86_64 emulation. It employs the system's native `clang` compiler with the NDK's sysroot and libraries. The custom CMake toolchain file and accompanying Bash scripts handle direct APK construction using `aapt2`, `zipalign`, and `apksigner`, demonstrating a comprehensive understanding of low-level Android build processes and achieving independent native development workflows.
 Stack: CMake, Shell, C++, Android NDK, Vulkan, ARM64, clang, PRoot Ubuntu, aapt2, zipalign, apksigner
 
 **[HNG_c14BE3-cli](https://github.com/babaolu/HNG_c14BE3-cli)**
-This globally installable command-line interface (CLI) for the Insighta Labs+ API provides a secure and robust method for interacting with user profiles and managing data. It integrates GitHub OAuth with PKCE for secure authentication, storing credentials locally with strict permissions, and automatically refreshes access tokens to maintain session integrity. The CLI demonstrates strong backend integration, effective terminal-based user interface design, and secure authentication best practices for API interactions.
+This globally installable command-line interface (CLI) for the Insighta Labs+ API provides a secure and robust method for interacting with user profiles and managing data. It integrates GitHub OAuth with PKCE for secure authentication, storing credentials locally with `0600` permissions, and automatically refreshes access tokens to maintain session integrity. The CLI demonstrates strong backend integration, effective terminal-based user interface design, and secure authentication best practices for API interactions, enabling paginated and filtered data retrieval, as well as admin functions.
 Stack: JavaScript, Node.js, GitHub OAuth, PKCE
 
 ## Technical Skills
 
 *   **Languages:** C++, Python, JavaScript, HTML, TypeScript, Shell, Slang, CMake, Makefile
-*   **Mobile & Graphics:** Android NDK, Vulkan, NativeActivity, ARM64 Development, Mobile GPU Optimization, Cross-compilation, Manual APK Packaging (`aapt2`, `zipalign`, `apksigner`), Slang, PRoot Ubuntu
+*   **Mobile & Graphics:** Android NDK, Vulkan, NativeActivity, ARM64 Development, Mobile GPU Optimization, Slang, Cross-compilation, `aapt2`, `zipalign`, `apksigner`, PRoot Ubuntu
 *   **Decentralized Systems:** DePIN (Decentralized Physical Infrastructure Networks), Distributed Systems, Token Economies, Erasure Coding (Reed-Solomon), K-Redundancy
 *   **Backend & APIs:** Node.js, Serverless Functions (Netlify), API Integration, PostgreSQL, GitHub OAuth, PKCE Authentication, CLI Development, RESTful APIs, Google Gemini API
-*   **Tooling & Build Systems:** CMake, Ninja, Git, GitHub Actions, clang, Termux
-*   **AI/ML:** Google Gemini API, Natural Language Processing (via API)
+*   **Tooling & DevOps:** CMake, Ninja, Git, GitHub Actions, `clang`, Termux
+*   **AI/ML:** Google Gemini API, Natural Language Processing
 
 ## Contact
 
