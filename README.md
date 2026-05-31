@@ -1,34 +1,43 @@
 # babaolu
 
-Software Engineer specializing in native mobile systems, high-performance graphics, and decentralized applications.
+Software Engineer focused on native mobile systems, high-performance graphics, scientific computing, and decentralized applications.
 
-I focus on developing robust native applications for mobile platforms and building complex decentralized systems. My recent work includes crafting a C++ and Vulkan-based CAD application for Android, MobileCAD, and developing a decentralized physical infrastructure network called Poot. I also create practical API-driven solutions, such as the `HNG_c14BE3-cli` for interacting with external services and `InterGen`, a web tool leveraging AI.
+I build robust native applications for mobile platforms, as seen in my work on **MobileCAD**, a C++20 and Vulkan-based CAD application for Android, and the custom ARM64 toolchains developed in **arm-ndk**. My recent work also extends to scientific computing with **MScProj**, where I developed a multi-physics finite element simulation framework for wearable HD-EMG devices. Additionally, I architect decentralized systems like **Poot**, a DePIN bridging mobile resource providers with cloud customers, and create practical API-driven solutions such as the **InterGen** web tool which leverages AI.
 
 ## Core focus areas
 
 **Native Mobile & High-Performance Graphics**
-*   Developing native Android applications using C++20, Vulkan, and Android NDK NativeActivity for direct hardware interaction.
-*   Building custom ARM64 toolchains for compiling native mobile applications without reliance on traditional build systems like Gradle.
-*   Implementing graphics rendering pipelines optimized for mobile GPUs with custom shader languages such as Slang.
+*   Developing native Android CAD applications using C++20, Vulkan, and Android NDK NativeActivity for direct hardware interaction, as demonstrated in `MobileCAD`.
+*   Building custom ARM64 toolchains for compiling native mobile applications on-device without reliance on traditional build systems like Gradle (`arm-ndk`).
+*   Implementing graphics rendering pipelines optimized for mobile GPUs with custom shader languages such as Slang, and handling manual APK packaging.
+
+**Scientific Computing & Simulation**
+*   Developing 2D multi-physics finite element simulation frameworks to model electromechanical interactions in wearable devices (`MScProj`).
+*   Utilizing high-performance computing libraries like FEniCSx, GMSH, and PETSc for solving complex partial differential equations in biomechanics simulations (`MScProj`).
+*   Implementing advanced features such as Nitsche-type contact penalties and extracting electrical potentials at electrode interfaces within detailed physical models (`MScProj`).
 
 **Decentralized Systems & Distributed Computing**
-*   Designing and implementing Decentralized Physical Infrastructure Networks (DePIN) that bridge mobile resource providers with cloud customers.
-*   Developing demand-gated token economies to incentivize real-world resource consumption in distributed systems.
-*   Ensuring data integrity and uptime in decentralized environments using techniques like erasure coding and k-redundancy.
+*   Designing and implementing Decentralized Physical Infrastructure Networks (DePIN) that bridge mobile resource providers with cloud customers, exemplified by `Poot`.
+*   Developing demand-gated token economies to incentivize real-world resource consumption and prevent inflation in distributed systems (`Poot`).
+*   Ensuring data integrity and high availability in decentralized environments using erasure coding (Reed-Solomon) and k-redundancy (`Poot`).
 
-**API Development & CLI/Web Tooling**
-*   Creating API-driven web tools, including serverless functions for interacting with AI models like Google Gemini.
-*   Developing globally installable command-line interfaces (CLIs) for authenticating with and managing external APIs using secure credential storage and token refresh.
-*   Building backend services in C++ and Python to support distributed applications and API endpoints, often integrating with databases like PostgreSQL.
+**API Development & Web/CLI Tooling**
+*   Creating API-driven web tools, including serverless functions for interacting with AI models like Google Gemini (`InterGen`).
+*   Developing globally installable command-line interfaces (CLIs) for authenticating with and managing external APIs (`HNG_c14BE3-cli`).
+*   Building backend orchestrator services in C++23, often integrating with databases like PostgreSQL, to support distributed applications (`Poot`).
 
 ## Selected Projects
 
+**[MScProj](https://github.com/babaolu/MScProj)**
+This repository contains a comprehensive 2D multi-physics finite element simulation framework designed to model, analyze, and optimize flexible, wearable high-density electromyography (HD-EMG) electrode array bands. It leverages FEniCSx and GMSH for meshing and solving, with PETSc for high-performance linear algebra and R for visualization. The project addresses the technical challenge of balancing electromechanical contact quality with bioelectric signal resolution, incorporating advanced physics like Nitsche-type contact penalties and detailed electrical potential extraction.
+Stack: Python, FEniCSx (DOLFINx), GMSH, PETSc, R
+
 **[babaolu](https://github.com/babaolu/babaolu)**
-This repository serves as my dynamic GitHub profile README, designed to automatically update and reflect my latest projects, skills, and specializations. It acts as a living portfolio, consolidating my work in native mobile systems, high-performance graphics, and decentralized applications. The project itself demonstrates the implementation of GitHub Actions for automated content management, ensuring that my profile remains current and accurately showcases my ongoing technical contributions and evolving areas of interest, including recent improvements to the update logic and AI-driven profile refreshing.
+This `babaolu` repository serves as my dynamic GitHub profile README, designed to automatically update and reflect my latest projects and specializations. It acts as a living portfolio, consolidating my work in native mobile systems, high-performance graphics, and decentralized applications. The project itself demonstrates the implementation of GitHub Actions for automated content management, ensuring that my profile remains current and accurately showcases my ongoing technical contributions, including recent improvements to the update logic and AI-driven profile refreshing.
 Stack: Python, GitHub Actions
 
 **[InterGen](https://github.com/babaolu/InterGen)**
-InterGen is a lightweight web tool designed to generate three thoughtful, role-specific interview questions for any given job title, powered by the Google Gemini API. Developed as part of a technical screen, the project prioritizes simple, readable, and secure code. It features a plain HTML, CSS, and JavaScript frontend, communicating with a Netlify Serverless Function (Node.js) that securely proxies requests to the `gemini-2.5-flash` API, demonstrating a practical approach to integrating AI into web applications with serverless architecture.
+InterGen is a lightweight web tool designed to generate three thoughtful, role-specific interview questions for any given job title, powered by the Google Gemini API. Developed as part of a technical screen, the project prioritizes simple, readable, and secure code. It features a plain HTML, CSS, and JavaScript frontend, communicating with a Netlify Serverless Function (Node.js) that securely proxies requests to the `gemini-2.5-flash` API, demonstrating a practical approach to integrating AI into web applications with a serverless architecture.
 Stack: HTML, JavaScript, Node.js, Netlify Serverless Functions, Google Gemini API
 
 **[MobileCAD](https://github.com/babaolu/MobileCAD)**
@@ -43,18 +52,15 @@ Stack: Makefile, C++, CMake, Python, TypeScript, PostgreSQL, Reed-Solomon, DePIN
 This project provides reusable toolchain infrastructure for cross-compiling native C++/Vulkan Android applications directly on ARM64 devices within PRoot Ubuntu environments, bypassing the need for Gradle or x86_64 emulation. It employs the system's native `clang` compiler with the NDK's sysroot and libraries. The custom CMake toolchain file and accompanying Bash scripts handle direct APK construction using `aapt2`, `zipalign`, and `apksigner`, demonstrating a comprehensive understanding of low-level Android build processes and achieving independent native development workflows.
 Stack: CMake, Shell, C++, Android NDK, Vulkan, ARM64, clang, PRoot Ubuntu, aapt2, zipalign, apksigner
 
-**[HNG_c14BE3-cli](https://github.com/babaolu/HNG_c14BE3-cli)**
-This globally installable command-line interface (CLI) for the Insighta Labs+ API provides a secure and robust method for interacting with user profiles and managing data. It integrates GitHub OAuth with PKCE for secure authentication, storing credentials locally with `0600` permissions, and automatically refreshes access tokens to maintain session integrity. The CLI demonstrates strong backend integration, effective terminal-based user interface design, and secure authentication best practices for API interactions, enabling paginated and filtered data retrieval, as well as admin functions.
-Stack: JavaScript, Node.js, GitHub OAuth, PKCE
-
 ## Technical Skills
 
 *   **Languages:** C++, Python, JavaScript, HTML, TypeScript, Shell, Slang, CMake, Makefile
-*   **Mobile & Graphics:** Android NDK, Vulkan, NativeActivity, ARM64 Development, Mobile GPU Optimization, Slang, Cross-compilation, `aapt2`, `zipalign`, `apksigner`, PRoot Ubuntu
+*   **Mobile & High-Performance Graphics:** Android NDK, Vulkan, NativeActivity, ARM64 Development, Mobile GPU Optimization, Slang, Cross-compilation, `aapt2`, `zipalign`, `apksigner`, PRoot Ubuntu, Physically Based Rendering, GMSH
+*   **Scientific Computing & Simulation:** FEniCSx (DOLFINx), PETSc, Finite Element Analysis (FEA), Multi-physics Modeling, Biomechanics, Numerical Methods, R (for visualization/analysis)
 *   **Decentralized Systems:** DePIN (Decentralized Physical Infrastructure Networks), Distributed Systems, Token Economies, Erasure Coding (Reed-Solomon), K-Redundancy
-*   **Backend & APIs:** Node.js, Serverless Functions (Netlify), API Integration, PostgreSQL, GitHub OAuth, PKCE Authentication, CLI Development, RESTful APIs, Google Gemini API
-*   **Tooling & DevOps:** CMake, Ninja, Git, GitHub Actions, `clang`, Termux
-*   **AI/ML:** Google Gemini API, Natural Language Processing
+*   **Backend & APIs:** Node.js, Serverless Functions (Netlify), API Integration, PostgreSQL, GitHub OAuth, PKCE Authentication, CLI Development, RESTful APIs, Google Gemini API, C++ Backend Development, Python Backend Development
+*   **Tooling & DevOps:** CMake, Ninja, Git, GitHub Actions, `clang`, Termux, Makefile, `aapt2`, `zipalign`, `apksigner`, PRoot Ubuntu, CI/CD Principles
+*   **AI/ML:** Google Gemini API, AI Integration, Natural Language Processing
 
 ## Contact
 
