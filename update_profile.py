@@ -2,11 +2,10 @@
 update_profile.py
 ─────────────────
 Weekly GitHub Action script that:
-  1. Fetches all public repos via GitHub API (with pagination)
+  1. Fetches all public repos (and recently pushed external/org repos)
   2. Gathers rich per-repo detail: description, topics, languages,
-     full commit history summary, and a generous README extract
-  3. Sends everything to Gemini, which rewrites the ENTIRE README —
-     every section reflects the current repo state, not weekly diffs
+     full commit history summary (filtered by author), and README extract
+  3. Sends everything to Gemini, which rewrites the ENTIRE README.
 """
 
 import os
@@ -23,15 +22,13 @@ GEMINI_API_KEY    = os.environ["GEMINI_API_KEY"]
 
 README_PATH = "README.md"
 
-# Repos to show in "Selected projects" — always the N most recently pushed,
-# regardless of whether they were touched this week or months ago.
+# Repos to show in "Selected projects" — always the N most recently pushed
 TOP_N_SPOTLIGHT = 6
 
 # Additional repos fed to Gemini as background context
 MAX_CONTEXT     = 20
 
 # How much of each repo's own README to extract (chars).
-# Generous so Gemini can write a real paragraph per project.
 README_CHARS    = 1200
 
 # How many recent commits to summarise per spotlight repo
@@ -50,6 +47,7 @@ def gh_get(url: str) -> dict | list:
     return r.json()
 
 def fetch_all_repos() -> list[dict]:
+    """Fetch all public repositories owned by the user."""
     repos, page = [], 1
     while True:
         batch = gh_get(
@@ -62,6 +60,45 @@ def fetch_all_repos() -> list[dict]:
         page += 1
     return repos
 
+def fetch_external_contributions(existing_repo_names: set) -> list[dict]:
+    """
+    Look through the user's recent activity stream to find external 
+    repositories (e.g., organizations) they have recently pushed to.
+    """
+    external_repos = []
+    seen = set(existing_repo_names)
+    page = 1
+
+    # The Events API typically caps at 300 events (3 pages of 100)
+    while page <= 3:
+        try:
+            events = gh_get(
+                f"https://api.github.com/users/{GITHUB_USER}/events"
+                f"?per_page=100&page={page}"
+            )
+            if not events:
+                break
+        except Exception:
+            break
+
+        for event in events:
+            if event.get("type") == "PushEvent":
+                repo_name = event.get("repo", {}).get("name")
+                
+                # If it's a new repo and NOT in the user's personal namespace
+                if repo_name and repo_name not in seen:
+                    if not repo_name.lower().startswith(f"{GITHUB_USER.lower()}/"):
+                        seen.add(repo_name)
+                        try:
+                            print(f"  ↳ Discovered recent external contribution: {repo_name}")
+                            repo_data = gh_get(f"https://api.github.com/repos/{repo_name}")
+                            external_repos.append(repo_data)
+                        except Exception:
+                            pass # Might fail if it's a private org repo your token can't read
+        page += 1
+
+    return external_repos
+
 def fetch_languages(full_name: str) -> dict[str, int]:
     """Return {language: bytes} dict, empty on failure."""
     try:
@@ -70,11 +107,7 @@ def fetch_languages(full_name: str) -> dict[str, int]:
         return {}
 
 def fetch_readme_text(full_name: str) -> str:
-    """
-    Decode a repo's README and return a clean text extract.
-    Strips blank lines and markdown headings so Gemini gets
-    actual prose / bullet content rather than structural noise.
-    """
+    """Decode a repo's README and return a clean text extract."""
     try:
         data    = gh_get(f"https://api.github.com/repos/{full_name}/readme")
         content = base64.b64decode(data["content"]).decode("utf-8", errors="ignore")
@@ -87,11 +120,12 @@ def fetch_readme_text(full_name: str) -> str:
         return ""
 
 def fetch_recent_commits(full_name: str) -> list[str]:
-    """Return the last N commit messages for the default branch."""
+    """Return the last N commit messages by THIS USER for the default branch."""
     try:
+        # Added ?author={GITHUB_USER} to ensure we only summarize YOUR work
         commits = gh_get(
             f"https://api.github.com/repos/{full_name}/commits"
-            f"?per_page={COMMITS_LIMIT}"
+            f"?author={GITHUB_USER}&per_page={COMMITS_LIMIT}"
         )
         return [c["commit"]["message"].splitlines()[0] for c in commits]
     except Exception:
@@ -131,15 +165,13 @@ def build_context_entry(repo: dict) -> dict:
 
 # ── Collect and organise repo data ───────────────────────────────────────────
 def collect_repo_data(repos: list[dict]) -> tuple[list[dict], list[dict]]:
-    # Always sort by pushed_at — most recent repos are spotlighted every run,
-    # not just repos touched in the last week.
     sorted_repos = sorted(
         repos,
         key=lambda r: r.get("pushed_at") or "",
         reverse=True,
     )
 
-    print(f"  Fetching rich data for top {TOP_N_SPOTLIGHT} repos …")
+    print(f"  Fetching rich data for top {TOP_N_SPOTLIGHT} active repos …")
     spotlight = [build_spotlight_entry(r) for r in sorted_repos[:TOP_N_SPOTLIGHT]]
 
     print(f"  Collecting context for up to {MAX_CONTEXT} additional repos …")
@@ -219,7 +251,7 @@ def call_gemini(spotlight: list[dict], context: list[dict],
         BACKGROUND REPOS — older / supporting context:
         {context_text}
 
-        Total public repos: {total}
+        Total repos analyzed: {total}
         Profile owner: {GITHUB_USER}
         Today's date: {now}
 
@@ -234,7 +266,7 @@ def call_gemini(spotlight: list[dict], context: list[dict],
             "parts": [{"text": prompt}]
         }],
         "generationConfig": {
-            "maxOutputTokens": 8192  # Increased to maximum possible output
+            "maxOutputTokens": 8192
         }
     }
 
@@ -246,11 +278,9 @@ def call_gemini(spotlight: list[dict], context: list[dict],
     )
     response.raise_for_status()
     
-    # Parse the response safely
     response_data = response.json()
     candidate = response_data.get("candidates", [{}])[0]
     
-    # Check WHY the model stopped generating
     finish_reason = candidate.get("finishReason", "UNKNOWN")
     if finish_reason != "STOP":
         print(f"⚠️ WARNING: Gemini stopped generating early. Reason: {finish_reason}")
@@ -270,16 +300,23 @@ def update_readme(content: str) -> None:
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 def main():
-    print(f"📡  Fetching repos for: {GITHUB_USER}")
-    repos = fetch_all_repos()
-    print(f"    Found {len(repos)} public repositories.")
+    print(f"📡  Fetching personal repos for: {GITHUB_USER}")
+    personal_repos = fetch_all_repos()
+    print(f"    Found {len(personal_repos)} personal public repositories.")
 
-    spotlight, context = collect_repo_data(repos)
+    personal_repo_names = {r.get("full_name") for r in personal_repos}
+    
+    print(f"📡  Checking recent events for external contributions...")
+    external_repos = fetch_external_contributions(personal_repo_names)
+
+    all_repos = personal_repos + external_repos
+
+    spotlight, context = collect_repo_data(all_repos)
 
     current_readme = read_current_readme()
     print("🤖  Asking Gemini to rewrite the README …")
     new_readme = call_gemini(spotlight, context,
-                             total=len(repos),
+                             total=len(all_repos),
                              current_readme=current_readme)
     update_readme(new_readme)
 
