@@ -2,61 +2,62 @@
 
 Software Engineer specializing in AI-driven systems, enterprise web applications, and decentralized infrastructure.
 
-I focus on building robust software solutions, particularly within AI-driven systems and enterprise web applications. My recent work includes developing `TerAI`, a native C++ rewrite for on-device AI, and enhancing `graceplace-reporting`, an AI-powered portal for enterprise report management. I also architect multi-agent AI systems, exemplified by `MyG`, to automate complex engineering tasks, and build shared components like `graceplace-platform-kit` to streamline development across related projects.
+I build robust software solutions, focusing on AI-driven systems, enterprise web applications, and decentralized infrastructure. Recently, I've developed **TerAI**, a high-performance C++ rewrite for on-device AI, and **MyG**, a multi-agent AI system designed for Vulkan graphics programming. I also create dynamic web applications like **invitation** for event management and contribute to decentralized physical infrastructure networks such as **Poot**.
 
 ## Core focus areas
 
 **AI-Driven Systems & Agent Orchestration**
-*   Developing high-performance, on-device AI tools like `TerAI` with native ARM64 compilation for zero-latency execution and minimal overhead.
-*   Orchestrating local multi-agent AI systems such as `MyG` (VulkanMind) to automate complex engineering tasks, including code generation, validation, and debugging for C++ and Vulkan.
-*   Integrating AI capabilities into enterprise applications, seen in `graceplace-reporting` for automated report parsing, summarization, and intelligent reminders.
+*   Developing high-performance, on-device AI tools like `TerAI` with native ARM64 compilation for zero-latency execution.
+*   Orchestrating local multi-agent AI systems such as `MyG` to automate complex engineering tasks, including code generation, validation, and debugging.
+*   Integrating on-device LLM inference capabilities using direct `libllama.so` linkage for efficient, local AI processing.
 
 **Enterprise Web Applications**
-*   Crafting enterprise-grade, role-gated monorepo portals, like `graceplace-reporting`, to manage critical workflows and reporting across distributed organizational units.
-*   Developing shared npm packages, as in `graceplace-platform-kit`, to standardize authentication utilities, design system tokens, and API contract types across a suite of platform applications.
-*   Building dynamic web applications like `invitation` that feature live content updates, administrative dashboards, and responsive PDF generation for event management.
+*   Building dynamic web applications like `invitation` that offer live content updates, administrative dashboards, and on-demand PDF generation for event management.
+*   Developing highly responsive, interactive web applications using modern frameworks such as Svelte 5 for engaging user experiences, as seen in `Dedication`.
+*   Crafting enterprise-grade solutions for managing critical workflows, including automated reporting and role-based access control, as exemplified by `graceplace-reporting` in my broader work.
 
 **Decentralized Infrastructure**
-*   Architecting and building secure decentralized networks, exemplified by `Poot`, to bridge mobile computing resources with cloud customers through innovative token economies.
-*   Designing orchestrator services for distributed node management, focusing on high-performance and resilient system operations.
+*   Architecting and building secure decentralized physical infrastructure networks (DePINs) like `Poot`, which bridge mobile computing resources with cloud customers via demand-gated token economies.
+*   Implementing decentralized zero-knowledge storage with erasure coding and AES-256-GCM encryption for data sharding across distributed nodes.
+*   Designing orchestrator services for robust distributed node management, ensuring resilience and high-performance operations in DePIN architectures.
 
 ## Selected Projects
 
 ### [babaolu](https://github.com/babaolu/babaolu)
-This repository serves as my dynamic GitHub profile README, designed to be automatically updated via GitHub Actions. Its purpose is to provide a current and comprehensive overview of my technical expertise, showcasing my latest contributions across AI-driven systems, enterprise web development, and decentralized infrastructure projects. The automation ensures that my public profile remains a fresh reflection of my ongoing work and specializations.
-Stack: Python
-
-### [graceplace-reporting](https://github.com/babaolu/graceplace-reporting)
-An enterprise-grade, role-gated monorepo portal meticulously designed to streamline monthly report management across distributed organizational units. This application features robust role-based views, automated reminders, and advanced AI for report parsing, summarization, and consolidated PDF/DOCX exports. Recent development includes migrating to a multi-permission RBAC system and implementing cross-subdomain SSO for enhanced security and a seamless user experience.
-Stack: TypeScript, React, Node.js, Express, Supabase (PostgreSQL with RLS), Tailwind CSS, PDFKit, Anthropic Claude, Google Gemini, OpenRouter, Nvidia NIM
-
-### [graceplace-platform-kit](https://github.com/babaolu/graceplace-platform-kit)
-This repository hosts a collection of shared npm packages central to the GracePlace platform, designed to ensure consistency and reusability across multiple client applications. It includes `@graceplace/platform-kit` for shared authentication utilities, domain configurations, and a Supabase cookie adapter client, alongside CSS design system tokens. Additionally, `@graceplace/api-types` provides pure TypeScript backend contract types for public and CMS endpoints, streamlining API development and integration.
-Stack: TypeScript, CSS
+This repository acts as my dynamic GitHub profile README, which is automatically updated using GitHub Actions. Its primary function is to provide a comprehensive and current overview of my technical specializations, highlighting my latest work in AI-driven systems, enterprise web development, and decentralized infrastructure. The automation ensures that my public profile accurately reflects my ongoing projects and evolving expertise without manual updates.
+Stack: Python, GitHub Actions
 
 ### [TerAI](https://github.com/babaolu/TerAI)
-A native ARM64 rewrite of the TerAI system, specifically engineered for zero-latency startup and minimal interpreter overhead by compiling directly with `clang++` in Termux. This project prioritizes efficient on-device AI execution, incorporating a direct in-process `libllama.so` linkage for local LLM inference. Further enhancements include advanced tab-completion, exposing tool schemas, and robust daemon management to prevent timeouts and manage git operations safely.
+`TerAI` is a high-performance, native ARM64 rewrite of an AI system, engineered for zero-latency startup and minimal overhead by compiling directly with `clang++` in Termux. This project focuses on efficient on-device AI execution, incorporating direct in-process `libllama.so` linkage for local LLM inference. Technical innovations include advanced tab-completion, exposing tool schemas, and robust daemon management, making it a powerful solution for portable AI tasks.
 Stack: C++, CMake, Shell, libcurl, nlohmann/json, readline, libllama.so
 
 ### [MyG](https://github.com/babaolu/MyG)
-Known as VulkanMind, this local multi-agent AI system is meticulously tailored for modern Vulkan graphics programming and high-performance C++ systems engineering. It intelligently orchestrates specialized agents for tasks such as platform detection, knowledge retrieval, Vulkan-Hpp/VMA code generation, validation, and debugging. The system integrates a self-improvement loop for continuous refinement and adaptation to complex engineering challenges, ensuring robust and evolving performance.
+Known as VulkanMind, `MyG` is a local multi-agent AI system specifically designed for modern Vulkan graphics programming and high-performance C++ systems engineering. It orchestrates specialized agents for tasks such as platform detection, knowledge retrieval, Vulkan-Hpp/VMA code generation, validation, and debugging. The system features a deterministic LangGraph state graph and integrates a self-improvement loop for continuous refinement, making it a robust and adaptable tool for complex engineering challenges.
 Stack: Python, FastAPI, LangGraph, Qdrant, SQLite, Pydantic, structlog, uv, Vulkan-Hpp/VMA
 
 ### [invitation](https://github.com/babaolu/invitation)
-A robust web application designed for dynamic event management, capable of generating unique, permanent invitation pages and live PDFs for each guest. Its innovative design ensures that if guest or table details change, the content on their personalized link and PDF updates instantly, eliminating the need for re-sending. It includes an administrative dashboard for guest and table management, along with responsive seating directory features for efficient event coordination, including options for guest creation and deletion.
-Stack: JavaScript, HTML, PLpgSQL, Supabase (PostgreSQL), Vercel, Netlify
+This web application generates unique, permanent invitation pages and live PDFs for event guests. Its core technical innovation lies in the instant, dynamic updating of content (like table numbers or QR codes) on a guest's existing link whenever details change, eliminating the need to re-send invitations. The project includes a login-protected admin dashboard for guest and table management, features responsive design, and integrates live PDF generation directly from the current database state using Supabase and PLpgSQL.
+Stack: JavaScript, PLpgSQL, HTML, Supabase (PostgreSQL), Vercel, Netlify
+
+### [Poot](https://github.com/babaolu/Poot)
+`Poot` is a decentralized physical infrastructure network (DePIN) that connects mobile miners with cloud customers through a demand-gated token economy. Tokens are only minted when real customer instances actively consume miner resources, giving the native token strong economic backing. Technically, it implements decentralized zero-knowledge storage, sharding customer data across multiple miners using erasure coding (Reed-Solomon) with AES-256-GCM encryption, ensuring K-redundancy and privacy. The system is designed to use only residual phone resources, avoiding lag or overheating.
+Stack: C++, Python, TypeScript, CMake, JavaScript, Reed-Solomon, AES-256-GCM, Docker, Postgres
+
+### [Dedication](https://github.com/babaolu/Dedication)
+`Dedication` is a beautifully structured, highly responsive, and interactive web application built with Svelte 5 and Vite. It showcases a modular, performance-oriented architecture with features like randomized gallery layouts, scroll-aware components, and dynamic content presentation. A notable technical aspect is its robust fallback mechanism: if photo assets are missing, the application gracefully displays handcrafted CSS gradients and emoji icons, ensuring an elegant user experience even before media is fully loaded.
+Stack: Svelte, CSS, JavaScript, HTML, Vite, Node.js
 
 ## Technical Skills
 
-**Languages:** C++, Python, TypeScript, JavaScript, PLpgSQL, HTML, CSS, Shell, CMake, Makefile, Svelte
+**Languages:** C++, CMake, CSS, HTML, JavaScript, Makefile, PLpgSQL, Python, Shell, Svelte, TypeScript
 
-**Web Technologies:** React, Node.js, Express, FastAPI, Vite, Tailwind CSS, React Router, Supabase SDK, Resend SDK, PDFKit, Mammoth, Telegram Bot API
+**Web Technologies:** Express, FastAPI, Netlify, Node.js, PDFKit, React, Svelte, Supabase SDK, Tailwind CSS, Vercel, Vite
 
-**Databases & Cloud Platforms:** Supabase, PostgreSQL, SQLite, Qdrant, Vercel, Netlify
+**Databases & Cloud Platforms:** Netlify, PostgreSQL, Qdrant, SQLite, Supabase, Vercel
 
-**AI & Distributed Systems:** Multi-Agent Systems, Large Language Models (LLMs), On-device AI, AI Orchestration, Decentralized Networks
+**AI & Distributed Systems:** AI Orchestration, Decentralized Networks, Demand-Gated Token Economies, Distributed Zero-Knowledge Storage, Large Language Models (LLMs), Multi-Agent Systems, On-device AI
 
-**Tools & Libraries:** Docker, LangGraph, Pydantic, libllama, Vulkan-Hpp/VMA, uv, structlog, nlohmann/json, libcurl, readline
+**Tools & Libraries:** CMake, Docker, LangGraph, libcurl, libllama, nlohmann/json, Pydantic, readline, structlog, uv, Vulkan-Hpp/VMA
 
 ## Contact
 
