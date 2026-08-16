@@ -1,6 +1,6 @@
 # babaolu
 
-Software Engineer building AI-driven systems, high-performance C++ applications, and decentralized web infrastructure.
+Software Engineer developing AI-driven systems, high-performance C++ applications, decentralized networks, and interactive web experiences.
 
 I build robust software solutions that blend AI innovation with high-performance computing and dynamic web experiences. My recent work includes developing **MyG**, a multi-agent AI system for Vulkan graphics programming, and **TerAI**, a C++ rewrite for efficient on-device AI with native ARM64 compilation. I also architect decentralized infrastructure projects like **Poot**, and craft interactive web applications such as **invitation** and **Dedication** for engaging user experiences.
 
@@ -14,7 +14,7 @@ I build robust software solutions that blend AI innovation with high-performance
 *   Engineering high-performance C++ systems, including native ARM64 applications and orchestrators for distributed networks like `Poot`.
 *   Building multi-agent AI solutions for modern Vulkan graphics programming, integrating Vulkan-Hpp/VMA code generation, validation, and debugging within `MyG`.
 
-**Enterprise Web Applications**
+**Dynamic Web Applications**
 *   Building dynamic web applications that offer features like live content updates, administrative dashboards, and on-demand PDF generation, as demonstrated in `invitation`.
 *   Developing highly responsive and interactive web experiences using modern frameworks like Svelte 5 with modular, performance-oriented architectures, seen in `Dedication`.
 
@@ -24,13 +24,13 @@ I build robust software solutions that blend AI innovation with high-performance
 
 ## Selected Projects
 
-### [MyG](https://github.com/babaolu/MyG)
-**MyG** (also known as VulkanMind) is a local multi-agent AI system designed to streamline modern Vulkan graphics programming and high-performance C++ systems engineering. It orchestrates specialized agents for tasks like platform detection, knowledge retrieval, Vulkan-Hpp/VMA code generation, validation, and debugging. The project implements a deterministic LangGraph state graph, ensuring structured execution, and integrates a self-improvement loop. Recent commits show focus on enabling end-to-end functionality, enhancing C++ code generation, and adding an interactive shell client for easier interaction.
-Stack: Python, FastAPI, LangGraph, Qdrant, SQLite, Pydantic, structlog, uv, Vulkan-Hpp/VMA, Makefile
-
 ### [babaolu](https://github.com/babaolu/babaolu)
 This repository hosts my dynamic GitHub profile README, which is automatically updated through a GitHub Actions workflow. Its primary function is to provide a current and accurate overview of my technical expertise, highlighting my work in AI-driven systems, high-performance computing, and decentralized infrastructure. This automated process, which includes AI-powered content generation, ensures my profile remains up-to-date with my latest projects and evolving skill set without manual intervention.
 Stack: Python, GitHub Actions, AI
+
+### [MyG](https://github.com/babaolu/MyG)
+**MyG** (also known as VulkanMind) is a local multi-agent AI system designed to streamline modern Vulkan graphics programming and high-performance C++ systems engineering. It orchestrates specialized agents for tasks like platform detection, knowledge retrieval, Vulkan-Hpp/VMA code generation, validation, and debugging. The project implements a deterministic LangGraph state graph, ensuring structured execution, and integrates a self-improvement loop. Recent commits show focus on enabling end-to-end functionality, enhancing C++ code generation, and adding an interactive shell client for easier interaction.
+Stack: Python, FastAPI, LangGraph, Qdrant, SQLite, Pydantic, structlog, uv, Vulkan-Hpp/VMA, Makefile
 
 ### [TerAI](https://github.com/babaolu/TerAI)
 **TerAI** is a native ARM64 rewrite of an AI system, specifically engineered for zero-latency startup and minimal interpreter overhead through direct compilation with `clang++` within Termux. This project enables efficient on-device AI execution by integrating direct in-process `libllama.so` linkage for local Large Language Model (LLM) inference. Technical highlights include sophisticated readline tab-completion, dynamic exposure of tool schemas, and a robust daemon designed to manage and prevent timeout issues, establishing it as a powerful, portable solution for local AI tasks.
