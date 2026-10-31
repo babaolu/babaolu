@@ -2,78 +2,84 @@
 update_profile.py
 ─────────────────
 Weekly GitHub Action script that:
-  1. Fetches all public repos (and recently pushed external/org repos)
-  2. Gathers rich per-repo detail: description, topics, languages,
-     full commit history summary (filtered by author), and README extract
-  3. Sends everything to Gemini, which rewrites the ENTIRE README.
+  1. Fetches public personal repos (excluding untouched forks) & recent external/org repos
+  2. Gathers rich per-repo detail concurrently: description, topics, languages,
+     author-filtered commit history, and clean README extracts
+  3. Uses Gemini system instructions to rewrite the ENTIRE README with verified contact links.
 """
 
 import os
+import re
+import sys
 import json
-import textwrap
-import requests
 import base64
+import requests
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 
 # ── Config ────────────────────────────────────────────────────────────────────
-GITHUB_USER       = os.environ["GITHUB_USER"]
-GITHUB_TOKEN      = os.environ["GITHUB_TOKEN"]
-GEMINI_API_KEY    = os.environ["GEMINI_API_KEY"]
+GITHUB_USER    = os.environ["GITHUB_USER"]
+GITHUB_TOKEN   = os.environ["GITHUB_TOKEN"]
+GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
-README_PATH = "README.md"
+README_PATH     = "README.md"
+GEMINI_MODEL    = "gemini-2.5-flash"
 
-# Repos to show in "Selected projects" — always the N most recently pushed
+# Repos to show in "Selected projects"
 TOP_N_SPOTLIGHT = 6
-
-# Additional repos fed to Gemini as background context
 MAX_CONTEXT     = 20
-
-# How much of each repo's own README to extract (chars).
-README_CHARS    = 1200
-
-# How many recent commits to summarise per spotlight repo
+README_CHARS    = 1500
 COMMITS_LIMIT   = 10
 
-GH_HEADERS = {
+# Canonical Contact Info (Source of Truth)
+LINKEDIN_URL    = "[https://www.linkedin.com/in/babatunde-adeoti-1614b2b9/](https://www.linkedin.com/in/babatunde-adeoti-1614b2b9/)"
+CONTACT_EMAIL   = "babaolu98@gmail.com"
+
+# Use a persistent session for connection pooling
+SESSION = requests.Session()
+SESSION.headers.update({
     "Authorization": f"Bearer {GITHUB_TOKEN}",
     "Accept": "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
-}
+})
 
 # ── GitHub helpers ────────────────────────────────────────────────────────────
 def gh_get(url: str) -> dict | list:
-    r = requests.get(url, headers=GH_HEADERS, timeout=15)
+    r = SESSION.get(url, timeout=15)
     r.raise_for_status()
     return r.json()
 
 def fetch_all_repos() -> list[dict]:
-    """Fetch all public repositories owned by the user."""
+    """Fetch public repositories owned by the user, skipping untouched forks."""
     repos, page = [], 1
     while True:
         batch = gh_get(
-            f"https://api.github.com/users/{GITHUB_USER}/repos"
+            f"[https://api.github.com/users/](https://api.github.com/users/){GITHUB_USER}/repos"
             f"?type=public&per_page=100&page={page}"
         )
         if not batch:
             break
-        repos.extend(batch)
+        for r in batch:
+            # Skip forks unless the user has pushed commits after forking
+            if r.get("fork") and r.get("pushed_at") <= r.get("created_at"):
+                continue
+            repos.append(r)
         page += 1
     return repos
 
 def fetch_external_contributions(existing_repo_names: set) -> list[dict]:
     """
-    Look through the user's recent activity stream to find external 
-    repositories (e.g., organizations) they have recently pushed to.
+    Scan the user's recent activity stream for external/org repositories
+    they have pushed to, overriding 'pushed_at' with the user's own push date.
     """
     external_repos = []
-    seen = set(existing_repo_names)
-    page = 1
+    seen = {name.lower() for name in existing_repo_names}
+    user_prefix = f"{GITHUB_USER.lower()}/"
 
-    # The Events API typically caps at 300 events (3 pages of 100)
-    while page <= 3:
+    for page in range(1, 4):  # Events API caps at 300 events (3 pages)
         try:
             events = gh_get(
-                f"https://api.github.com/users/{GITHUB_USER}/events"
+                f"[https://api.github.com/users/](https://api.github.com/users/){GITHUB_USER}/events"
                 f"?per_page=100&page={page}"
             )
             if not events:
@@ -83,48 +89,49 @@ def fetch_external_contributions(existing_repo_names: set) -> list[dict]:
 
         for event in events:
             if event.get("type") == "PushEvent":
-                repo_name = event.get("repo", {}).get("name")
-                
-                # If it's a new repo and NOT in the user's personal namespace
-                if repo_name and repo_name not in seen:
-                    if not repo_name.lower().startswith(f"{GITHUB_USER.lower()}/"):
-                        seen.add(repo_name)
-                        try:
-                            print(f"  ↳ Discovered recent external contribution: {repo_name}")
-                            repo_data = gh_get(f"https://api.github.com/repos/{repo_name}")
-                            external_repos.append(repo_data)
-                        except Exception:
-                            pass # Might fail if it's a private org repo your token can't read
-        page += 1
+                repo_name = event.get("repo", {}).get("name", "")
+                repo_lower = repo_name.lower()
 
+                if repo_name and repo_lower not in seen and not repo_lower.startswith(user_prefix):
+                    seen.add(repo_lower)
+                    try:
+                        print(f"  ↳ Discovered recent external contribution: {repo_name}")
+                        repo_data = gh_get(f"[https://api.github.com/repos/](https://api.github.com/repos/){repo_name}")
+                        # Override pushed_at with the timestamp of YOUR push event
+                        # so active org repos don't artificially stay #1 forever
+                        repo_data["pushed_at"] = event.get("created_at") or repo_data.get("pushed_at")
+                        external_repos.append(repo_data)
+                    except Exception:
+                        pass
     return external_repos
 
 def fetch_languages(full_name: str) -> dict[str, int]:
-    """Return {language: bytes} dict, empty on failure."""
     try:
-        return gh_get(f"https://api.github.com/repos/{full_name}/languages")
+        return gh_get(f"[https://api.github.com/repos/](https://api.github.com/repos/){full_name}/languages")
     except Exception:
         return {}
 
 def fetch_readme_text(full_name: str) -> str:
-    """Decode a repo's README and return a clean text extract."""
+    """Decode a repo's README and return a clean text extract without markdown noise."""
     try:
-        data    = gh_get(f"https://api.github.com/repos/{full_name}/readme")
+        data    = gh_get(f"[https://api.github.com/repos/](https://api.github.com/repos/){full_name}/readme")
         content = base64.b64decode(data["content"]).decode("utf-8", errors="ignore")
+        # Strip HTML tags and markdown badges
+        content = re.sub(r"<[^>]+>", "", content)
+        content = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", content)
         lines   = [
             l.strip() for l in content.splitlines()
-            if l.strip() and not l.startswith("#")
+            if l.strip() and not l.strip().startswith("#")
         ]
         return " ".join(lines)[:README_CHARS]
     except Exception:
         return ""
 
 def fetch_recent_commits(full_name: str) -> list[str]:
-    """Return the last N commit messages by THIS USER for the default branch."""
+    """Return the last N commit messages authored by THIS USER."""
     try:
-        # Added ?author={GITHUB_USER} to ensure we only summarize YOUR work
         commits = gh_get(
-            f"https://api.github.com/repos/{full_name}/commits"
+            f"[https://api.github.com/repos/](https://api.github.com/repos/){full_name}/commits"
             f"?author={GITHUB_USER}&per_page={COMMITS_LIMIT}"
         )
         return [c["commit"]["message"].splitlines()[0] for c in commits]
@@ -138,22 +145,23 @@ def build_spotlight_entry(repo: dict) -> dict:
     top_langs = sorted(langs, key=langs.get, reverse=True)[:5]
 
     return {
-        "name":           repo["name"],
-        "url":            repo["html_url"],
-        "description":    repo.get("description") or "",
-        "topics":         repo.get("topics") or [],
-        "stars":          repo.get("stargazers_count", 0),
-        "forks":          repo.get("forks_count", 0),
+        "name":             repo["name"],
+        "full_name":        full_name,
+        "url":              repo["html_url"],
+        "description":      repo.get("description") or "",
+        "topics":           repo.get("topics") or [],
+        "stars":            repo.get("stargazers_count", 0),
+        "forks":            repo.get("forks_count", 0),
         "primary_language": repo.get("language") or "",
-        "all_languages":  top_langs,
-        "pushed_at":      repo.get("pushed_at") or "",
-        "created_at":     repo.get("created_at") or "",
-        "readme_extract": fetch_readme_text(full_name),
-        "recent_commits": fetch_recent_commits(full_name),
+        "all_languages":    top_langs,
+        "pushed_at":        repo.get("pushed_at") or "",
+        "created_at":       repo.get("created_at") or "",
+        "readme_extract":   fetch_readme_text(full_name),
+        "recent_commits":   fetch_recent_commits(full_name),
     }
 
 def build_context_entry(repo: dict) -> dict:
-    """Lightweight dict for background repos (no extra API calls)."""
+    """Lightweight dict for background repos."""
     return {
         "name":        repo["name"],
         "description": repo.get("description") or "",
@@ -171,8 +179,9 @@ def collect_repo_data(repos: list[dict]) -> tuple[list[dict], list[dict]]:
         reverse=True,
     )
 
-    print(f"  Fetching rich data for top {TOP_N_SPOTLIGHT} active repos …")
-    spotlight = [build_spotlight_entry(r) for r in sorted_repos[:TOP_N_SPOTLIGHT]]
+    print(f"  Fetching rich data concurrently for top {TOP_N_SPOTLIGHT} active repos …")
+    with ThreadPoolExecutor(max_workers=TOP_N_SPOTLIGHT) as executor:
+        spotlight = list(executor.map(build_spotlight_entry, sorted_repos[:TOP_N_SPOTLIGHT]))
 
     print(f"  Collecting context for up to {MAX_CONTEXT} additional repos …")
     context = [
@@ -193,120 +202,128 @@ def read_current_readme() -> str:
 def call_gemini(spotlight: list[dict], context: list[dict],
                 total: int, current_readme: str) -> str:
 
-    spotlight_text = json.dumps(spotlight, indent=2)
-    context_text   = json.dumps(context,   indent=2)
-    now            = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-    prompt = textwrap.dedent(f"""
-        You are rewriting a developer's GitHub profile README.
-        Use the repository data below as the sole source of truth.
-        The current README is a formatting/structure reference only.
+    system_instruction = f"""You are rewriting a developer's GitHub profile README.
+Use the provided repository JSON data as the sole source of truth for projects and skills.
+The current README is provided strictly as a structural and formatting reference.
 
-        ── REWRITE RULES ────────────────────────────────────────────────────
+── REWRITE RULES ────────────────────────────────────────────────────
 
-        HEADER & TAGLINE
-        • Keep the developer's name exactly.
-        • Update the one-line tagline to match what the repos reveal.
+HEADER & TAGLINE
+• Keep the developer's name exactly as shown in the current README.
+• Update the one-line tagline to accurately reflect what the repositories reveal.
 
-        INTRO PARAGRAPH
-        • First person, 3–4 sentences, specific to actual projects.
-        • Name recent repos naturally — no filler like "passionate about".
+INTRO PARAGRAPH
+• First person, 3–4 sentences, specific to actual projects and engineering focus.
+• Name recent repos naturally — no filler or clichés like "passionate about".
 
-        CORE FOCUS AREAS
-        • Derive entirely from repos. Add/remove areas to match the evidence.
-        • Each area gets 2–3 bullet points describing concrete work done.
+CORE FOCUS AREAS
+• Derive entirely from the repositories. Add or remove areas to match the evidence.
+• Each area gets 2–3 bullet points describing concrete systems and work built.
 
-        SELECTED PROJECTS  ← most important section
-        • Include ALL {len(spotlight)} spotlight repos, even if unchanged since
-          last week. This section must always reflect the {len(spotlight)} most
-          recently pushed repos — it is NOT a "what changed this week" list.
-        • Each project MUST have:
-            - A bold project name linked to its URL
-            - A description paragraph of AT LEAST 30 words that explains
-              what the project does, why it exists, and what makes it
-              technically interesting. Use the readme_extract and
-              recent_commits fields to write this — do not just restate
-              the one-line description.
-            - A "Stack:" line listing languages and key technologies.
-        • If a repo has an empty readme_extract, infer from its name,
-          description, topics, and commit messages — still write 30+ words.
+SELECTED PROJECTS (Most Important Section)
+• Include ALL {len(spotlight)} spotlight repos in the exact order provided.
+• Each project MUST have:
+  - A bold project name linked to its URL.
+  - A description paragraph of AT LEAST 30 words explaining what the project does, why it exists, and what makes it technically interesting. Synthesize `readme_extract` and `recent_commits` — do not merely restate the one-line description.
+  - A "Stack:" line listing languages and key technologies.
+• If a repo has an empty `readme_extract`, infer from its name, description, topics, and commit messages — still write 30+ words.
 
-        TECHNICAL SKILLS
-        • Infer from all_languages, topics, and readme_extracts.
-        • Update every sub-list; remove anything with no repo evidence.
+TECHNICAL SKILLS
+• Infer from `all_languages`, `topics`, and `readme_extract`.
+• Update every sub-list; remove anything with no repository evidence.
 
-        CONTACT
-        • Copy the Contact section from the current README character-for-
-          character. Do not add, remove, or alter any line in it.
+CONTACT
+• Use the exact structure of the Contact section from the current README, but enforce these verified contact details:
+  - LinkedIn: {LINKEDIN_URL}
+  - Email: {CONTACT_EMAIL}
+• Preserve any other valid social/portfolio links from the current Contact section, replacing any broken or outdated LinkedIn/Email addresses with the verified ones above.
 
-        TONE  professional but human; no buzzwords or vague superlatives.
+TONE & FORMAT
+• Tone: Empirical, systems-focused, professional, and human; no buzzwords or vague superlatives.
+• Output raw Markdown ONLY — do NOT wrap the output in ```markdown code fences, and include no conversational preamble."""
 
-        OUTPUT  Markdown only — no preamble, no code fences, nothing else.
+    user_content = (
+        f"Profile owner: {GITHUB_USER}\n"
+        f"Today's date: {now}\n"
+        f"Total repos analyzed: {total}\n\n"
+        f"SPOTLIGHT REPOS ({len(spotlight)} most recently pushed, highest weight):\n"
+        f"{json.dumps(spotlight, indent=2)}\n\n"
+        f"BACKGROUND REPOS (supporting context):\n"
+        f"{json.dumps(context, indent=2)}\n\n"
+        f"CURRENT README (structure reference):\n"
+        f"{current_readme}"
+    )
 
-        ── DATA ─────────────────────────────────────────────────────────────
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
-        SPOTLIGHT REPOS — {len(spotlight)} most recently pushed (highest weight):
-        {spotlight_text}
-
-        BACKGROUND REPOS — older / supporting context:
-        {context_text}
-
-        Total repos analyzed: {total}
-        Profile owner: {GITHUB_USER}
-        Today's date: {now}
-
-        CURRENT README (structure reference only):
-        {current_readme}
-    """).strip()
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-    
     payload = {
+        "systemInstruction": {
+            "parts": [{"text": system_instruction}]
+        },
         "contents": [{
-            "parts": [{"text": prompt}]
+            "role": "user",
+            "parts": [{"text": user_content}]
         }],
         "generationConfig": {
-            "maxOutputTokens": 8192
+            "temperature": 0.3,
+            "maxOutputTokens": 8192,
+            "thinkingConfig": {
+                "thinkingBudget": 1024
+            }
         }
     }
 
     response = requests.post(
         url,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY,
+        },
         json=payload,
         timeout=90,
     )
     response.raise_for_status()
-    
+
     response_data = response.json()
     candidate = response_data.get("candidates", [{}])[0]
-    
+
     finish_reason = candidate.get("finishReason", "UNKNOWN")
     if finish_reason != "STOP":
         print(f"⚠️ WARNING: Gemini stopped generating early. Reason: {finish_reason}")
-    
+
     try:
-        return candidate["content"]["parts"][0]["text"]
-    except KeyError:
+        text = candidate["content"]["parts"][0]["text"].strip()
+        # Safeguard: Strip accidental outer markdown code fences if present
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:markdown|md)?\s*\n", "", text)
+            text = re.sub(r"\n```\s*$", "", text)
+        return text.strip()
+    except (KeyError, IndexError):
         print("❌ ERROR: Could not extract text from Gemini response.")
         print(f"Full response debug: {json.dumps(response_data, indent=2)}")
         return ""
 
 # ── Write README ──────────────────────────────────────────────────────────────
 def update_readme(content: str) -> None:
+    if not content or len(content) < 200:
+        print("❌ ERROR: Generated README content is empty or suspiciously short. Aborting write to protect existing README.md.")
+        sys.exit(1)
+
     with open(README_PATH, "w", encoding="utf-8") as f:
-        f.write(content.strip() + "\n")
+        f.write(content + "\n")
     print("✅  README.md fully rewritten.")
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 def main():
     print(f"📡  Fetching personal repos for: {GITHUB_USER}")
     personal_repos = fetch_all_repos()
-    print(f"    Found {len(personal_repos)} personal public repositories.")
+    print(f"    Found {len(personal_repos)} active personal public repositories.")
 
-    personal_repo_names = {r.get("full_name") for r in personal_repos}
-    
-    print(f"📡  Checking recent events for external contributions...")
+    personal_repo_names = {r.get("full_name") for r in personal_repos if r.get("full_name")}
+
+    print("📡  Checking recent events for external contributions...")
     external_repos = fetch_external_contributions(personal_repo_names)
 
     all_repos = personal_repos + external_repos
@@ -314,10 +331,13 @@ def main():
     spotlight, context = collect_repo_data(all_repos)
 
     current_readme = read_current_readme()
-    print("🤖  Asking Gemini to rewrite the README …")
-    new_readme = call_gemini(spotlight, context,
-                             total=len(all_repos),
-                             current_readme=current_readme)
+    print(f"🤖  Asking {GEMINI_MODEL} to rewrite the README …")
+    new_readme = call_gemini(
+        spotlight,
+        context,
+        total=len(all_repos),
+        current_readme=current_readme,
+    )
     update_readme(new_readme)
 
 if __name__ == "__main__":
