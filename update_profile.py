@@ -23,7 +23,7 @@ GITHUB_TOKEN   = os.environ["GITHUB_TOKEN"]
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
 README_PATH     = "README.md"
-GEMINI_MODEL    = "gemini-2.5-flash"
+GEMINI_MODEL    = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 # Protocol & Host constants (prevents Markdown/UI auto-linkifiers from mangling URLs)
 GH_API          = "https" + "://api.github.com"
@@ -257,53 +257,78 @@ TONE & FORMAT
         f"{current_readme}"
     )
 
-    url = f"{GEMINI_API}/v1beta/models/{GEMINI_MODEL}:generateContent"
+    models_to_try = [GEMINI_MODEL]
+    if GEMINI_MODEL != "gemini-1.5-flash":
+        models_to_try.append("gemini-1.5-flash")
 
-    payload = {
-        "systemInstruction": {
-            "parts": [{"text": system_instruction}]
-        },
-        "contents": [{
-            "role": "user",
-            "parts": [{"text": user_content}]
-        }],
-        "generationConfig": {
-            "temperature": 0.3,
-            "maxOutputTokens": 8192,
-            "thinkingConfig": {
-                "thinkingBudget": 1024
+    last_exception = None
+    for model_name in models_to_try:
+        url = f"{GEMINI_API}/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+
+        payload = {
+            "systemInstruction": {
+                "parts": [{"text": system_instruction}]
+            },
+            "contents": [{
+                "role": "user",
+                "parts": [{"text": user_content}]
+            }],
+            "generationConfig": {
+                "temperature": 0.3,
+                "maxOutputTokens": 8192,
             }
         }
-    }
 
-    response = requests.post(
-        url,
-        headers={
-            "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY,
-        },
-        json=payload,
-        timeout=90,
-    )
-    response.raise_for_status()
+        print(f"🤖  Attempting generateContent with model '{model_name}'...")
+        response = requests.post(
+            url,
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": GEMINI_API_KEY,
+            },
+            json=payload,
+            timeout=90,
+        )
 
-    response_data = response.json()
-    candidate = response_data.get("candidates", [{}])[0]
+        if not response.ok:
+            print(f"❌ Gemini API request to '{model_name}' failed with HTTP {response.status_code}:")
+            try:
+                print(json.dumps(response.json(), indent=2))
+            except Exception:
+                print(response.text)
+            try:
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                last_exception = e
+                continue
 
-    finish_reason = candidate.get("finishReason", "UNKNOWN")
-    if finish_reason != "STOP":
-        print(f"⚠️ WARNING: Gemini stopped generating early. Reason: {finish_reason}")
+        response_data = response.json()
+        candidate = response_data.get("candidates", [{}])[0]
 
-    try:
-        text = candidate["content"]["parts"][0]["text"].strip()
-        if text.startswith("```"):
-            text = re.sub(r"^```(?:markdown|md)?\s*\n", "", text)
-            text = re.sub(r"\n```\s*$", "", text)
-        return text.strip()
-    except (KeyError, IndexError):
-        print("❌ ERROR: Could not extract text from Gemini response.")
-        print(f"Full response debug: {json.dumps(response_data, indent=2)}")
-        return ""
+        finish_reason = candidate.get("finishReason", "UNKNOWN")
+        if finish_reason != "STOP":
+            print(f"⚠️ WARNING: Gemini stopped generating early. Reason: {finish_reason}")
+
+        try:
+            parts = candidate.get("content", {}).get("parts", [])
+            # Skip thought parts if present and collect text parts
+            text_parts = [p.get("text", "") for p in parts if not p.get("thought") and "text" in p]
+            text = "\n".join(text_parts).strip()
+            if not text and parts:
+                text = parts[-1].get("text", "").strip()
+
+            if text.startswith("```"):
+                text = re.sub(r"^```(?:markdown|md)?\s*\n", "", text)
+                text = re.sub(r"\n```\s*$", "", text)
+            return text.strip()
+        except (KeyError, IndexError, AttributeError):
+            print("❌ ERROR: Could not extract text from Gemini response.")
+            print(f"Full response debug: {json.dumps(response_data, indent=2)}")
+            return ""
+
+    if last_exception:
+        raise last_exception
+    return ""
 
 # ── Write README ──────────────────────────────────────────────────────────────
 def update_readme(content: str) -> None:
