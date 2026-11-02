@@ -25,15 +25,17 @@ GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 README_PATH     = "README.md"
 GEMINI_MODEL    = "gemini-2.5-flash"
 
+# Protocol & Host constants (prevents Markdown/UI auto-linkifiers from mangling URLs)
+GH_API          = "https" + "://api.github.com"
+GEMINI_API      = "https" + "://generativelanguage.googleapis.com"
+LINKEDIN_URL    = "https" + "://www.linkedin.com/in/babatunde-adeoti-1614b2b9/"
+CONTACT_EMAIL   = "babaolu98@gmail.com"
+
 # Repos to show in "Selected projects"
 TOP_N_SPOTLIGHT = 6
 MAX_CONTEXT     = 20
 README_CHARS    = 1500
 COMMITS_LIMIT   = 10
-
-# Canonical Contact Info (Source of Truth)
-LINKEDIN_URL    = "[https://www.linkedin.com/in/babatunde-adeoti-1614b2b9/](https://www.linkedin.com/in/babatunde-adeoti-1614b2b9/)"
-CONTACT_EMAIL   = "babaolu98@gmail.com"
 
 # Use a persistent session for connection pooling
 SESSION = requests.Session()
@@ -54,14 +56,14 @@ def fetch_all_repos() -> list[dict]:
     repos, page = [], 1
     while True:
         batch = gh_get(
-            f"[https://api.github.com/users/](https://api.github.com/users/){GITHUB_USER}/repos"
+            f"{GH_API}/users/{GITHUB_USER}/repos"
             f"?type=public&per_page=100&page={page}"
         )
         if not batch:
             break
         for r in batch:
             # Skip forks unless the user has pushed commits after forking
-            if r.get("fork") and r.get("pushed_at") <= r.get("created_at"):
+            if r.get("fork") and (r.get("pushed_at") or "") <= (r.get("created_at") or ""):
                 continue
             repos.append(r)
         page += 1
@@ -79,7 +81,7 @@ def fetch_external_contributions(existing_repo_names: set) -> list[dict]:
     for page in range(1, 4):  # Events API caps at 300 events (3 pages)
         try:
             events = gh_get(
-                f"[https://api.github.com/users/](https://api.github.com/users/){GITHUB_USER}/events"
+                f"{GH_API}/users/{GITHUB_USER}/events"
                 f"?per_page=100&page={page}"
             )
             if not events:
@@ -96,9 +98,8 @@ def fetch_external_contributions(existing_repo_names: set) -> list[dict]:
                     seen.add(repo_lower)
                     try:
                         print(f"  ↳ Discovered recent external contribution: {repo_name}")
-                        repo_data = gh_get(f"[https://api.github.com/repos/](https://api.github.com/repos/){repo_name}")
+                        repo_data = gh_get(f"{GH_API}/repos/{repo_name}")
                         # Override pushed_at with the timestamp of YOUR push event
-                        # so active org repos don't artificially stay #1 forever
                         repo_data["pushed_at"] = event.get("created_at") or repo_data.get("pushed_at")
                         external_repos.append(repo_data)
                     except Exception:
@@ -107,14 +108,14 @@ def fetch_external_contributions(existing_repo_names: set) -> list[dict]:
 
 def fetch_languages(full_name: str) -> dict[str, int]:
     try:
-        return gh_get(f"[https://api.github.com/repos/](https://api.github.com/repos/){full_name}/languages")
+        return gh_get(f"{GH_API}/repos/{full_name}/languages")
     except Exception:
         return {}
 
 def fetch_readme_text(full_name: str) -> str:
     """Decode a repo's README and return a clean text extract without markdown noise."""
     try:
-        data    = gh_get(f"[https://api.github.com/repos/](https://api.github.com/repos/){full_name}/readme")
+        data    = gh_get(f"{GH_API}/repos/{full_name}/readme")
         content = base64.b64decode(data["content"]).decode("utf-8", errors="ignore")
         # Strip HTML tags and markdown badges
         content = re.sub(r"<[^>]+>", "", content)
@@ -131,7 +132,7 @@ def fetch_recent_commits(full_name: str) -> list[str]:
     """Return the last N commit messages authored by THIS USER."""
     try:
         commits = gh_get(
-            f"[https://api.github.com/repos/](https://api.github.com/repos/){full_name}/commits"
+            f"{GH_API}/repos/{full_name}/commits"
             f"?author={GITHUB_USER}&per_page={COMMITS_LIMIT}"
         )
         return [c["commit"]["message"].splitlines()[0] for c in commits]
@@ -256,7 +257,7 @@ TONE & FORMAT
         f"{current_readme}"
     )
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+    url = f"{GEMINI_API}/v1beta/models/{GEMINI_MODEL}:generateContent"
 
     payload = {
         "systemInstruction": {
@@ -295,7 +296,6 @@ TONE & FORMAT
 
     try:
         text = candidate["content"]["parts"][0]["text"].strip()
-        # Safeguard: Strip accidental outer markdown code fences if present
         if text.startswith("```"):
             text = re.sub(r"^```(?:markdown|md)?\s*\n", "", text)
             text = re.sub(r"\n```\s*$", "", text)
