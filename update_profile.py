@@ -11,6 +11,7 @@ Weekly GitHub Action script that:
 import os
 import re
 import sys
+import time
 import json
 import base64
 import requests
@@ -23,7 +24,7 @@ GITHUB_TOKEN   = os.environ["GITHUB_TOKEN"]
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
 README_PATH     = "README.md"
-GEMINI_MODEL    = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL    = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
 # Protocol & Host constants (prevents Markdown/UI auto-linkifiers from mangling URLs)
 GH_API          = "https" + "://api.github.com"
@@ -258,8 +259,9 @@ TONE & FORMAT
     )
 
     models_to_try = [GEMINI_MODEL]
-    if GEMINI_MODEL != "gemini-1.5-flash":
-        models_to_try.append("gemini-1.5-flash")
+    for fallback in ["gemini-3.5-flash", "gemini-3.8-flash", "gemini-2.5-flash"]:
+        if fallback not in models_to_try:
+            models_to_try.append(fallback)
 
     last_exception = None
     for model_name in models_to_try:
@@ -274,21 +276,32 @@ TONE & FORMAT
                 "parts": [{"text": user_content}]
             }],
             "generationConfig": {
-                "temperature": 0.3,
                 "maxOutputTokens": 8192,
             }
         }
 
-        print(f"🤖  Attempting generateContent with model '{model_name}'...")
-        response = requests.post(
-            url,
-            headers={
-                "Content-Type": "application/json",
-                "x-goog-api-key": GEMINI_API_KEY,
-            },
-            json=payload,
-            timeout=90,
-        )
+        response = None
+        for attempt in range(1, 4):
+            if attempt == 1:
+                print(f"🤖  Attempting generateContent with model '{model_name}'...")
+            else:
+                print(f"🤖  Retrying generateContent with model '{model_name}' (attempt {attempt}/3)...")
+
+            response = requests.post(
+                url,
+                headers={
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": GEMINI_API_KEY,
+                },
+                json=payload,
+                timeout=90,
+            )
+
+            if response.status_code in (429, 503) and attempt < 3:
+                print(f"⚠️ HTTP {response.status_code} received from '{model_name}'. Retrying in {attempt * 3}s...")
+                time.sleep(attempt * 3)
+                continue
+            break
 
         if not response.ok:
             print(f"❌ Gemini API request to '{model_name}' failed with HTTP {response.status_code}:")
