@@ -1,74 +1,73 @@
 # babaolu
 
-Software Engineer specializing in AI-driven systems, real-time 3D reconstruction, high-performance C++ graphics, and scalable web applications, including decentralized infrastructure.
+Systems Engineer specializing in high-performance C++/Vulkan graphics, real-time 3D spatial reconstruction, adaptive AI pipelines, and synchronized full-stack applications.
 
-I'm a Software Engineer focused on designing and implementing robust systems across diverse domains. Recently, I've been building `3ill`, a novel system for real-time 3D scene reconstruction from networked phones, and `learn-assist`, an adaptive tutoring platform leveraging advanced OCR and vision models. My work also includes developing scalable web applications like `clirt` and `hng_todo` that feature real-time synchronization and intricate user interfaces, alongside engineering an automated GitHub profile (`babaolu`) to reflect my evolving technical landscape.
+I am a software engineer focused on building low-level graphics engines, distributed spatial compute platforms, and real-time synchronized applications. Recently, I developed [MobileCAD](https://github.com/babaolu/MobileCAD), a native Vulkan 1.4 3D CAD engine built on Android entirely inside Termux, and [3ill](https://github.com/babaolu/3ill), a multi-phone 3D scene reconstruction engine created for the Meta Global AI Developer Hackathon. My work spans low-level system graphics, AI-driven adaptive learning systems like [learn-assist](https://github.com/babaolu/learn-assist), and synchronized cross-platform e-commerce tools like [clirt](https://github.com/babaolu/clirt).
 
-## Core focus areas
+## Core Focus Areas
 
-**AI-Driven Systems & Agent Orchestration**
-*   Developed `learn-assist`, an adaptive tutoring system focused on high-fidelity text and mathematical formula extraction from textbook scans using vision models and local OCR for item-bank generation.
-*   Engineered `MyG`, a multi-agent AI system that orchestrates specialized agents for Vulkan graphics code generation, validation, and debugging using LangGraph.
-*   Implemented automated GitHub profile updates in `babaolu`, leveraging AI for content generation to ensure the profile reflects current project work and skills.
+**High-Performance Graphics & Mobile Systems**
+* Built [MobileCAD](https://github.com/babaolu/MobileCAD), a native C++20 and Vulkan 1.4 CAD application directly targeting Android's `NativeActivity` and `ANativeWindow`, bypassing display servers and build wrappers like Gradle.
+* Developed custom 120Hz VSync double-buffered render loops, S-Pen 2D sketch-on-plane tools, parametric CSG boolean operations, ray-picked 3D scene graphs, and binary STL mesh exporters.
+* Configured a self-hosting compilation and execution environment targeting ARM64 mobile hardware directly within native Termux.
 
-**Real-time 3D Reconstruction & Distributed Compute**
-*   Created `3ill`, a system to fuse multiple phone camera perspectives into a navigable 3D scene in real time, employing distributed capture, compute, and viewer components.
-*   Designed the `3ill` pipeline to handle photo/pose ingest, feature extraction, and tile rendering, with compute stages adaptable to compute-lender phones or cloud GPUs using CUDA-COLMAP.
-*   Developed a placement guide for `3ill` that dynamically identifies optimal phone positions to maximize scene coverage and re-plans live as devices move.
+**Real-Time 3D Reconstruction & Spatial Computing**
+* Engineered [3ill](https://github.com/babaolu/3ill) to fuse raw multi-phone camera feeds and pose data into unified, navigable 3D scenes accessible via virtual camera viewports.
+* Architected a distributed split-compute pipeline offloading dense feature extraction, SAM masking, and rendering across compute-lender phones and cloud CUDA-COLMAP nodes.
+* Implemented live placement coverage guidance that dynamically calculates blind spots and re-plans device positioning during camera drift.
 
-**High-Performance Graphics & C++ Systems**
-*   Implemented core Vulkan graphics rendering concepts in `VulkanTest`, including creating vertex buffers, managing swapchains, setting up graphics pipelines, and recording command buffers for scene rendering.
-*   Designed and built the C++ orchestrator for `Poot`, a decentralized physical infrastructure network, enabling efficient resource allocation and management within a distributed environment.
-*   Rewrote `TerAI` in C++ for native ARM64 compilation, achieving significant performance gains for on-device AI applications with zero-latency startup and direct `libllama.so` linkage.
+**AI Systems, OCR & Adaptive Learning**
+* Created [learn-assist](https://github.com/babaolu/learn-assist) to test mastery-based learning from technical textbooks using an automated, multi-stage evaluation pipeline.
+* Built local OCR microservices combined with vision models to resolve corrupted mathematical notation, LaTeX symbols, and complex formulas in scanned engineering texts.
+* Implemented isolated item-bank generators with non-author difficulty screening and dual-model verification for multi-concept transfer problems.
 
-**Scalable Web Applications & Real-time Synchronization**
-*   Developed `clirt` and `clirt-mobile`, a web and Android application pair for custom T-shirt design, featuring live SVG previews, Google sign-in, and instant cart synchronization across devices using Pusher Channels.
-*   Created `hng_todo`, a SvelteKit-based todo application with intelligent quick-add parsing for dates and lists, recurring task management, and drag-and-drop reordering.
-*   Implemented a JSON API for `clirt` to support its mobile counterpart, alongside self-service account deletion and robust server-side validation for checkout and delivery.
+**Real-Time Full-Stack & Cross-Platform Sync**
+* Developed [clirt](https://github.com/babaolu/clirt) and [clirt-mobile](https://github.com/babaolu/clirt-mobile), establishing sub-second state and cart synchronization across web and Android clients using Pusher Channels.
+* Built dynamic interactive canvas customization tools featuring real-time SVG rendering, font effects, matrix positioning, and localized checkout flows for Nigeria.
 
 ## Selected Projects
 
+### [MobileCAD](https://github.com/babaolu/MobileCAD)
+MobileCAD is a native Android 3D CAD application engineered from scratch in C++20 and Vulkan 1.4 (`VK_API_VERSION_1_4`). Designed for high-performance mobile modeling with touchscreen and S-Pen inputs, it interfaces directly with Android `NativeActivity` and `ANativeWindow` without intermediate display servers or Gradle wrappers. The project features 120Hz VSync rendering, ear-clipping polygon extrusion, CSG boolean solid primitives, ray-picked scene graphs, binary STL exports, and a self-hosting Termux toolchain.
+
+Stack: C++, Vulkan 1.4, CMake, Shell, Slang, Android NDK, Termux
+
+### [3ill](https://github.com/babaolu/3ill)
+Built for the Meta Global AI Developer Hackathon, 3ill links networked mobile devices together to capture physical locations and fuse multi-angle photos and poses into navigable 3D scenes. Its split-compute architecture distributes pipeline stages—including feature extraction, SAM masking, and dense CUDA-COLMAP reconstructions—between edge phones and cloud GPU workers, complete with live coverage tracking to guide user placement and handle camera drift.
+
+Stack: Python, CUDA, COLMAP, SAM, HTML, Shell
+
 ### [babaolu](https://github.com/babaolu/babaolu)
-This repository hosts my dynamic GitHub profile README, which is automatically generated and updated through a sophisticated GitHub Actions workflow. Its primary function is to provide a current and accurate overview of my technical expertise, highlighting my latest projects and evolving skill set without manual intervention. The automation process includes AI-powered content generation using the Gemini API, ensuring the profile remains up-to-date and reflects my ongoing work across various engineering domains.
+An automated GitHub profile generator driven by GitHub Actions that dynamically updates this profile README to reflect real-time engineering output. The system fetches repository data, commit logs, and topic metadata across all active projects, utilizing the Google Gemini API (`gemini-3.5-flash`) with structured error handling and automated fallbacks to rewrite technical summaries and preserve accurate engineering metrics.
 
 Stack: Python, GitHub Actions, Gemini API
 
-### [3ill](https://github.com/babaolu/3ill)
-`3ill` is an innovative system designed to link multiple phones in a single location, fusing their camera perspectives into a navigable 3D scene that users can explore with a virtual camera, much like a video game. Built for the Meta Global AI Developer Hackathon, it features distributed processing where capture phones stream data to an aggregator, and compute-lender phones or cloud GPUs handle pipeline stages like decoding, feature extraction, and tile rendering. The project also includes a placement guide to optimize phone positioning for scene coverage.
-
-Stack: Python, HTML, Shell, CUDA, COLMAP, GPU
-
 ### [learn-assist](https://github.com/babaolu/learn-assist)
-`learn-assist` is an adaptive tutoring system designed to teach a textbook chapter to mastery and verify retention with delayed cold tests, exploring whether deep understanding is possible without reading the source material. The project focuses on high-fidelity text and mathematical formula extraction from scanned PDFs, using local OCR and vision models to overcome corruption in notation. Its multi-stage pipeline includes sophisticated item-bank generation with dual-model verification and difficulty screening, aiming to create transfer questions beyond mere recall.
+learn-assist is an adaptive tutoring platform engineered to evaluate whether students can achieve mastery over complex technical material (such as MRI physics) strictly through automated instruction. To bypass corrupted PDF notation, it uses vision models and a local OCR microservice to clean mathematical formulas before synthesizing multi-concept item banks, performing non-author difficulty screening, and executing offline mastery verification loops.
 
-Stack: Python, OCR, Vision Models
+Stack: Python, Local OCR, Vision Models
 
 ### [clirt-mobile](https://github.com/babaolu/clirt-mobile)
-The Android application for Clirt, a custom T-shirt shop for Nigeria, `clirt-mobile` enables users to design custom tees, place orders, and track them with real-time cart synchronization with the web platform. Developed with Expo, it features seamless Google sign-in, a live design preview with various customization options (text, graphics, colors, sizes), and a straightforward checkout process with pay-on-delivery. The app ensures a consistent user experience by sharing cart and order data instantly across mobile and web platforms.
+The native Android client for the Clirt T-shirt customization service, built using React Native and Expo. It provides Google OAuth authentication, an interactive design canvas with live previews, 2D manipulation controls, and sub-second cart synchronization with web sessions powered by Pusher Channels. It includes full order management and localized checkout across all 36 Nigerian states and the FCT.
 
-Stack: TypeScript, JavaScript, Expo, React Native
+Stack: TypeScript, JavaScript, React Native, Expo, Pusher Channels
 
 ### [clirt](https://github.com/babaolu/clirt)
-`clirt` is a web-based custom T-shirt shop for Nigeria, featuring a live SVG customizer where customers can design their shirts with text or graphics, drag elements into place, and see instant previews. The platform provides six styles with varying neck and sleeve options, supporting custom text effects and original graphics. Key technical features include instant cart synchronization across tabs and devices via Pusher Channels, Google sign-in, a robust JSON API for the accompanying mobile app, and server-side validation for order and delivery details, with pay-on-delivery.
+Clirt is a full-stack e-commerce platform and custom T-shirt design shop optimized for Nigerian users. Built with Svelte and hosted on Vercel, it features a live SVG customization engine with drag-and-drop vector manipulation, real-time multi-device cart synchronization via Pusher Channels, transactional notifications through Mailgun, and a shared `/api/v1` REST backend servicing both web browsers and native mobile clients.
 
-Stack: TypeScript, Svelte, CSS, JavaScript, HTML, Vercel, Pusher Channels, Mailgun, PostgreSQL, Drizzle
-
-### [hng_todo](https://github.com/babaolu/hng_todo)
-`hng_todo` is a minimalist, single-account todo application built with SvelteKit on Vercel, utilizing PostgreSQL on Neon via Drizzle for data persistence. It features an intelligent quick-add input that understands natural language for dates and lists, a comprehensive view system (Today, Upcoming, Inbox, Lists, Logbook), and advanced recurring task management. Users benefit from drag-and-drop reordering, keyboard shortcuts, a detail panel for task management, and a powerful search function across titles and notes.
-
-Stack: TypeScript, Svelte, SvelteKit, CSS, HTML, JavaScript, PostgreSQL, Drizzle, Neon, Vercel
+Stack: TypeScript, Svelte, CSS, JavaScript, HTML, Vercel, Pusher Channels, Mailgun
 
 ## Technical Skills
 
-**Languages:** C++, CMake, CSS, GLSL, HTML, JavaScript, PLpgSQL, Python, Shell, Svelte, SvelteKit, TypeScript
+**Languages:** C++, TypeScript, Python, JavaScript, HTML, CSS, Shell, CMake, Slang, Svelte
 
-**Web Technologies:** Expo, FastAPI, Netlify, Pusher Channels, React Native, Svelte, SvelteKit, Supabase, Vercel
+**Graphics, Vision & Spatial Computing:** Vulkan 1.4, CUDA, COLMAP, Segment Anything Model (SAM), Dear ImGui, Android NDK, 3D Parametric CAD, Ray Picking
 
-**Databases & Cloud Platforms:** Docker, Drizzle, GitHub Actions, Mailgun, Neon, PostgreSQL, Qdrant, SQLite, Supabase, Vercel
+**AI & Machine Learning:** LangGraph, Multi-Agent Systems, Vision Models, Local OCR, Gemini API, Adaptive Learning Systems
 
-**AI & Distributed Systems:** AI Orchestration, COLMAP, Decentralized Networks, Demand-Gated Token Economies, Distributed Zero-Knowledge Storage, Large Language Models (LLMs), Multi-Agent Systems, OCR, On-device AI, Vision Models
+**Web & Mobile Frameworks:** SvelteKit, React Native, Expo, Node.js, REST APIs
 
-**Tools & Libraries:** AES-256-GCM, ARM64, CMake, CUDA, Docker, Expo, FastAPI, Gemini API, GitHub Actions, GLSL, GPU, LangGraph, libcurl, libllama.so, Mailgun, nlohmann/json, Neon, Pydantic, Pusher Channels, readline, Reed-Solomon, structlog, uv, Vulkan-Hpp/VMA
+**Databases & Cloud Infrastructure:** PostgreSQL, Drizzle, Neon, Vercel, Pusher Channels, GitHub Actions, Mailgun, Docker, Termux
 
 ## Contact
 
